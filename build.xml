@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<project name="kSoap2_BB" default="export" basedir=".">
+	
+	<!-- Project defs -->
+	<property name="build.base"             value="${user.home}/src/build" />
+	<property name="libs.base"              value="C:/dev/libs" />
+	
+	<property name="project.name"           value="${ant.project.name}" />
+	<property name="project.src"            value="${basedir}/src" />
+	<property name="project.build"          value="${build.base}/${project.name}" />
+	<property name="project.build.src"      value="${project.build}/src" />
+	<property name="project.build.classes"  value="${project.build}/classes" />
+	<property name="project.build.package"  value="${project.build}/package" />
+	
+	<!-- External libraries directory -->
+	<property name="libs.jar" value="${libs.base}/jar" />
+	<property name="libs.cod" value="${libs.base}/cod" />
+	
+	<!-- ********************************************************************** -->
+		
+	<taskdef resource="bb-ant-defs.xml" />
+	
+	<!-- ********************************************************************** -->
+	
+	<!-- RIM tools -->
+	<property name="jde.home" location="C:/Program Files/Research In Motion/BlackBerry JDE 4.5.0" />
+	<property name="simulator.home" location="${jde.home}/simulator" />
+	<property name="jde.bin.javaloader" value="${jde.home}/bin/javaloader.exe" />
+	
+	<!-- ********************************************************************** -->
+	
+	<!-- RIM Classpath -->
+	<path id="rim.classpath">
+		<fileset dir="${jde.home}/lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<!-- ********************************************************************** -->
+	
+	<!-- Target -> init -->
+	<target name="init">
+		<tstamp />
+	</target>
+		
+	<!-- Target -> prepare -->
+	<target name="prepare" description="" depends="init">
+		<delete dir="${project.build}" />
+		<mkdir  dir="${project.build}" />
+		<delete dir="${project.build.src}" />
+		<delete dir="${project.build.package}" />
+		<mkdir  dir="${project.build.src}" />
+		<mkdir  dir="${project.build.package}" />
+	</target>
+	
+	<!-- Compile the generated/src to -->
+	<target name="compile" description="" depends="prepare">
+		<copy todir="${project.build.src}">
+			<fileset dir="${project.src}">
+				<include name="**/*.java" />
+			</fileset>
+		</copy>
+		<rapc output="${project.name}_lib" 
+		      srcdir="${project.build.src}" 
+		      destdir="${project.build.package}"
+		      quiet="true">
+			<import>
+				<path refid="rim.classpath" />
+			</import>
+			<jdp type="library" />
+		</rapc>
+	</target>
+	
+	<!-- Copy to the build libraries base -->
+	<target name="export" description="" depends="compile">
+		<!-- Delete the external ${project.name}_lib entries in ${libs.cod} & ${libs.jar} -->
+		<delete>
+			<fileset dir="${libs.cod}">
+				<include name="**/${project.name}_lib.cod" />
+			</fileset>
+			<fileset dir="${libs.jar}">
+				<include name="**/${project.name}_lib.jar" />
+			</fileset>
+		</delete>
+		<!-- Copy relevant *.cod files -->
+		<copy todir="${libs.cod}">
+			<fileset dir="${project.build.package}">
+				<include name="**/*.cod" />
+				<include name="**/*.jad" />
+			</fileset>
+		</copy>
+		<!-- Copy relevant *.jar files -->
+		<copy todir="${libs.jar}">
+			<fileset dir="${project.build.package}">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+	</target>
+</project>
